@@ -135,5 +135,6 @@ if(clk("perlin_init")) {
         timer("perlin_init", 0)
     } else {
         PERLIN_INIT_CLK()
+        print("end")
     }
 }
