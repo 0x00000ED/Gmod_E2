@@ -1,0 +1,207 @@
+#[
+    * ======================================= *
+    * E2power Simple Admin. Author: 0x00000ED *
+    * ======================================= *
+
+    Methods:
+    
+        /*
+        * Safe teleport to the player.
+        * @param Calling_Ply    entity.
+        * @param Target_Ply     entity.
+        * @noreturn
+        **/
+        void e2pGoto([Calling_Ply Target_Ply]:entity)
+        
+        /*
+        * Safe teleport player.
+        * @param Calling_Ply    entity.
+        * @param Target_Ply     entity.
+        * @noreturn
+        **/
+        void e2pBring([Calling_Ply Target_Ply]:entity)
+        
+        /*
+        * Strip player weapons.
+        * @param Player         entity.
+        * @noreturn
+        **/
+        void e2pPlayerStrip(Player:entity)
+        
+        /*
+        * CleanUp player entities.
+        * @param Player         entity.
+        * @noreturn
+        **/
+        void e2pPlayerCleanup(Player:entity)
+        
+        /*
+        * Find player Entityes.
+        * @param Player         entity.
+        * @return               array.
+        **/
+        array findPlayerEntities(Player:entity)
+        
+    TODO:
+        Cleanup all
+        Unlag
+]#
+
+@persist E2pSimpleAdminVersion:string
+
+if(first())
+{
+    E2pSimpleAdminVersion = "1.1"
+    
+    function vector playerSend([From To]:entity, Force:number)
+    {
+        if(!To:pos():isInWorld() & !Force) {
+            return vec(-1)
+        }
+        
+        local YawForward = To:eyeAngles():yaw()
+        local Directions = array(YawForward - 180, YawForward + 90, YawForward - 90, YawForward)
+        local ToPos = To:pos()
+        local RFrom = ToPos + vec(0,0,32)
+        foreach(K,V:number = Directions)
+        {
+            local RTo = ToPos + ang(0, V, 0):forward() * 47
+            rangerFilter(array(From, To))
+            if(!rangerOffsetHull(From, RFrom, RTo):hit()) {
+                return RTo
+            }
+        }
+        
+        if(Force) {
+            return ToPos + ang(0, Directions:number(1), 0):forward() * 47
+        }
+        return vec(-1)
+    }
+    
+    function array findPlayerEntities(Player:entity)
+    {
+        findClearWhiteList()
+        
+        #Invalid entity
+        findExcludeEntities(Player:weapons())
+        findExcludeClass("gmod_wire_hologram")
+        findExcludeClass("gmod_hands")
+        findExcludeClass("player")
+        #Invalid entity
+        
+        findIncludePlayerProps(Player)
+        findInSphere(entity():pos(), 2^31-1)
+        
+        return findToArray()
+    }
+    
+    function void e2pGoto([Calling_Ply Target_Ply]:entity)
+    {
+        if(Calling_Ply == Target_Ply) {
+            printColor(array(vec(255,90,0), "You cannot target this person"))
+            return
+        }
+        
+        if(!Calling_Ply:isAlive()) {
+            printColor(array(vec(255,90,0), "You are dead!"))
+            return
+        }
+        
+        if(Calling_Ply:inVehicle()) {
+            printColor(array(vec(255,90,0), "Please leave the vehicle first!"))
+            return
+        }
+        
+        if(!Target_Ply:isAlive()) {
+            printColor(array(vec(255,90,0), Target_Ply:name()+" is dead!"))
+            return
+        }
+        
+        if(Target_Ply:inVehicle() & !Calling_Ply:inNoclip()) {
+            printColor(array(vec(255,90,0), "Target is in a vehicle! Noclip and use this command to force a goto."))
+            return
+        }
+        
+        local NewPos = playerSend(Calling_Ply, Target_Ply, Calling_Ply:inNoclip())
+        if(NewPos == vec(-1)) {
+            printColor(array(vec(255,90,0), "Can't find a place to put you! Noclip and use this command to force a goto."))
+            return
+        }
+        local NewAng = (Target_Ply:pos() - NewPos):toAngle()
+        
+        Calling_Ply:setPos(NewPos)
+        Calling_Ply:setEyeAngles(NewAng)
+        Calling_Ply:setVel(-Calling_Ply:vel() + vec(0, 0, gravity() * tickInterval()))
+        
+        printColor(
+            array(
+                teamColor(Calling_Ply:team()), Calling_Ply:name(),
+                vec(152,212,255), " teleported to ",
+                teamColor(Target_Ply:team()), Target_Ply:name()
+            )
+        )
+    }
+    
+    function void e2pBring([Calling_Ply Target_Ply]:entity)
+    {
+        if(Calling_Ply == Target_Ply) {
+            printColor(array(vec(255,90,0), "You cannot target this person"))
+            return
+        }
+        
+        if(!Calling_Ply:isAlive()) {
+            printColor(array(vec(255,90,0), "You are dead!"))
+            return
+        }
+        
+        if(Calling_Ply:inVehicle()) {
+            printColor(array(vec(255,90,0), "Please leave the vehicle first!"))
+            return
+        }
+        
+        if(!Target_Ply:isAlive()) {
+            printColor(array(vec(255,90,0), Target_Ply:name()+" is dead!"))
+            return
+        }
+        
+        if(Target_Ply:inVehicle()) {
+            printColor(array(vec(255,90,0), "Can't bring the player. He is in vehicle :("))
+            return
+        }
+        
+        local NewPos = playerSend(Target_Ply, Calling_Ply, Target_Ply:inNoclip())
+        if(NewPos == vec(-1)) {
+            printColor(array(vec(255,90,0), "Can't find a place to put target!"))
+            return
+        }
+        local NewAng = (Calling_Ply:pos() - NewPos):toAngle()
+        
+        Target_Ply:setPos(NewPos)
+        Target_Ply:setEyeAngles(NewAng)
+        Target_Ply:setVel(-Target_Ply:vel() + vec(0, 0, gravity() * tickInterval()))
+        
+        printColor(
+            array(
+                teamColor(Calling_Ply:team()), Calling_Ply:name(),
+                vec(152,212,255), " brought ",
+                teamColor(Target_Ply:team()), Target_Ply:name()
+            )
+        )
+    }
+    
+    function void e2pPlayerStrip(Player:entity)
+    {
+        Player:weapons():propDelete()
+    }
+    
+    function void e2pPlayerCleanup(Player:entity)
+    {
+        findPlayerEntities(Player):propDelete()
+    }
+    
+    function void libVersion() {
+        printColor(array(vec(255,0,0), "-= ", vec(0,255,0), "E2power", vec(200), " Simple Admin Lib by ", vec(20), "0", vec(220,0,0), "x", vec(20), "00000", vec(220,0,0), "ED", vec(255,0,0), " =-", vec(255), "\nVersion: "+E2pSimpleAdminVersion))
+    }
+    
+    libVersion()
+}

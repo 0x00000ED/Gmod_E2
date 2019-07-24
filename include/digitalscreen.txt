@@ -1,0 +1,156 @@
+#[    
+    * =================================================== *
+    * Digital Screen API. Version: 1.0. Author: 0x00000ED *
+    * =================================================== *
+
+    Methods:
+
+        /*
+        * Initialize digital screen resolution.
+        * @param Width      number.
+        * @param Height     number.
+        * @noreturn
+        **/
+        void wirelink:dsInit([Width Height]:number)
+        
+        /*
+        * Clear digital screen.
+        * @noreturn
+        **/
+        void wirelink:dsClear()
+        
+        /*
+        * Draw pixel at the coordinates.
+        * @param X          number.
+        * @param Y          number.
+        * @param Color      vector.
+        * @noreturn
+        **/
+        void wirelink:dsPixel([X Y]:number, Color:vector)
+        
+        /*
+        * Draw line at the coordinates.
+        * @param Point1     vector2.
+        * @param Point2     vector2.
+        * @param Color      vector.
+        * @noreturn
+        **/
+        void wirelink:dsLine(Point1:vector2, Point2:vector2, Color:vector)
+        
+    Example:
+    
+        #include "../digitalScreen"
+        
+        if(first())
+        {
+            local DS = entity():isWeldedTo():wirelink()
+            
+            DS:dsInit(50, 50)
+            DS:dsClear()
+            DS:dsPixel(25, 25, vec(255))
+        }
+]#
+
+if(first())
+{
+    function void wirelink:dsInit(Size:vector2) {
+        This[1048569] = 2
+        This[1048574] = 1
+        
+        This[1048572] = Size:y()
+        This[1048573] = Size:x()
+    }
+    
+    function void wirelink:dsClear() {
+        This[1048569] = 2
+        This[1048574] = 1
+    }
+    
+    function void wirelink:dsPixel(Coord:vector2, Color:vector) {
+        This[Coord:dot(vec2(1, This[1048573]))] = rgb2digi(Color, 2)
+    }
+    
+    function void wirelink:dsPixel(Coord:vector2, TColor:number) {
+        This[Coord:dot(vec2(1, This[1048573]))] = TColor
+    }
+    
+    function void wirelink:dsUpdate(State:number) {
+        This[1048575] = !!State
+    }
+    
+    function void wirelink:plotLineLow(X0, Y0, X1, Y1, TColor) {
+        local Width = This[1048573]
+        
+        local Dx = X1 - X0
+        local Dy = Y1 - Y0
+        local Yi = 1
+        
+        if(Dy < 0) {
+            Yi = -1
+            Dy = -Dy
+        }
+        
+        D = 2*Dy - Dx
+        Y = Y0
+        
+        for(X = X0, X1)
+        {
+            This[vec2(X,Y):dot(vec2(1, Width))] = TColor
+            
+            if(D > 0) {
+               Y = Y + Yi
+               D = D - 2*Dx
+            }
+            D = D + 2*Dy
+        }
+    }
+    
+    function void wirelink:plotLineHigh(X0, Y0, X1, Y1, TColor) {
+        local Width = This[1048573]
+        
+        local Dx = X1 - X0
+        local Dy = Y1 - Y0
+        local Xi = 1
+        
+        if(Dx < 0) {
+            Xi = -1
+            Dx = -Dx
+        }
+        
+        D = 2*Dx - Dy
+        X = X0
+        
+        for(Y = Y0, Y1)
+        {
+            This[vec2(X,Y):dot(vec2(1, Width))] = TColor
+            
+            if(D > 0) {
+               X = X + Xi
+               D = D - 2*Dy
+            }
+            D = D + 2*Dx
+        }
+    }
+    
+    function void wirelink:dsLine(Point1:vector2, Point2:vector2, Color:vector) {
+        local X0 = Point1:x()
+        local Y0 = Point1:y()
+        local X1 = Point2:x()
+        local Y1 = Point2:y()
+        local Clr = rgb2digi(Color, 2)
+        
+        if(abs(Y1 - Y0) < abs(X1 - X0)) {
+            if(X0 > X1) {
+                This:plotLineLow(X1, Y1, X0, Y0, Clr)
+            } else {
+                This:plotLineLow(X0, Y0, X1, Y1, Clr)
+            }
+        } else {
+            if(Y0 > Y1) {
+                This:plotLineHigh(X1, Y1, X0, Y0, Clr)
+            } else {
+                This:plotLineHigh(X0, Y0, X1, Y1, Clr)
+            }
+        }
+    }
+}

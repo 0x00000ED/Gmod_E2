@@ -1,0 +1,139 @@
+#[
+    * ========================================== *
+    * Perlin Noise. Port from p5.js by 0x00000ED *
+    * ========================================== *
+]#
+
+@persist PERLIN_:table
+@persist [PID PERLIN_SIZE PERLIN_YWRAPB PERLIN_YWRAP PERLIN_ZWRAPB PERLIN_ZWRAP]:number
+@persist [PERLIN_octaves PERLIN_amp_falloff]:number [PERLIN_INIT_CLK]:string
+
+if(first())
+{
+    PID = 0
+    
+    PERLIN_YWRAPB = 4
+    PERLIN_YWRAP = 1 << PERLIN_YWRAPB
+    PERLIN_ZWRAPB = 8
+    PERLIN_ZWRAP = 1 << PERLIN_ZWRAPB
+    PERLIN_SIZE = 4095
+    
+    PERLIN_octaves = 4 # default to medium smooth
+    PERLIN_amp_falloff = 0.5 # 50% reduction/octave
+    
+    PERLIN_INIT_CLK = "onPerlinInit"
+    
+    function void onPerlinInit(){}
+    
+    function void perlinInit() {
+        timer("perlin_init", 0)
+    }
+    
+    function number scaled_cosine(I:number) {
+        return 0.5 * (1.0 - cosr(I * pi()))
+    }
+    
+    function number noise(X:number, Y:number, Z:number) {
+        if(!PERLIN_:count()) {
+            return -1
+        }
+        
+        if(X < 0) {
+            X = -X
+        }
+        if(Y < 0) {
+            Y = -Y
+        }
+        if(Z < 0) {
+            Z = -Z
+        }
+        
+        local Xi = floor(X)
+        local Yi = floor(Y)
+        local Zi = floor(Z)
+        
+        local Xf = X - Xi
+        local Yf = Y - Yi
+        local Zf = Z - Zi
+        
+        local Ampl = 0.5
+        local RXf = RYf = Of = R = N1 = N2 = N3 = 0
+        
+        for(I = 1, PERLIN_octaves) {
+            Of = Xi + (Yi << PERLIN_YWRAPB) + (Zi << PERLIN_ZWRAPB)
+            
+            RXf = scaled_cosine(Xf)
+            RYf = scaled_cosine(Yf)
+            
+            N1 = PERLIN_[Of && PERLIN_SIZE, number]
+            N1 += RXf * (PERLIN_[(Of + 1) && PERLIN_SIZE, number] - N1)
+            N2 = PERLIN_[(Of + PERLIN_YWRAP) && PERLIN_SIZE, number]
+            N2 += RXf * (PERLIN_[(Of + PERLIN_YWRAP + 1) && PERLIN_SIZE, number] - N2)
+            N1 += RYf * (N2 - N1)
+            
+            Of += PERLIN_ZWRAP
+            N2 = PERLIN_[Of && PERLIN_SIZE, number]
+            N2 += RXf * (PERLIN_[(Of + 1) && PERLIN_SIZE, number] - N2)
+            N3 = PERLIN_[(Of + PERLIN_YWRAP) && PERLIN_SIZE, number]
+            N3 += RXf * (PERLIN_[(Of + PERLIN_YWRAP + 1) && PERLIN_SIZE, number] - N3)
+            N2 += RYf * (N3 - N2)
+            
+            N1 += scaled_cosine(Zf) * (N2 - N1)
+            
+            R += N1 * Ampl
+            Ampl *= PERLIN_amp_falloff
+            
+            Xi = Xi << 1
+            Xf *= 2
+            Yi = Yi << 1
+            Yf *= 2
+            Zi = Zi << 1
+            Zf *= 2
+            
+            if(Xf >= 1.0) {
+                Xi++
+                Xf--
+            }
+            if(Yf >= 1.0) {
+                Yi++
+                Yf--
+            }
+            if(Zf >= 1.0) {
+                Zi++
+                Zf--
+            }
+        }
+        return R
+    }
+    
+    function number noise(X:number, Y:number) {
+        return noise(X, Y, 0)
+    }
+    
+    function number noise(X:number) {
+        return noise(X, 0, 0)
+    }
+    
+    function void perlinDetail(Lod:number, Falloff:number) {
+        if(Lod > 0) {
+            PERLIN_octaves = Lod
+        }
+        
+        if(Falloff > 0) {
+            PERLIN_amp_falloff = Falloff
+        }
+    }
+}
+
+if(clk("perlin_init")) {
+    while(perf() & PID < PERLIN_SIZE+1) {
+        PERLIN_[PID, number] = random()
+        PID++
+    }
+    
+    if(PID < PERLIN_SIZE+1) {
+        timer("perlin_init", 0)
+    } else {
+        PERLIN_INIT_CLK()
+    }
+}

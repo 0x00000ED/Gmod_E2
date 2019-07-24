@@ -1,0 +1,142 @@
+#[
+    * =================================================== *
+    * Easy Chat Commands. Version: 1.3. Author: 0x00000ED *
+    * =================================================== *
+
+    Constants:
+    
+        CHAT_FLAG_ALL     // Chat command for all.
+        CHAT_FLAG_OWNER   // Chat command for owner.
+        CHAT_FLAG_FRIENDS // Chat command for friends.
+
+    Methods:
+
+        /*
+        * Register chat command.
+        * @param Command    string.
+        * @param Callback   string.
+        * @param Flag       number.
+        * @noreturn
+        **/
+        void regChatCmd([Command Callback]:string, [Flag]:number)
+        
+        /*
+        * Hide chat for all owner commands.
+        * @param Toggle     number.
+        * @noreturn
+        **/
+        void hideOwnerCmd(Toggle:number)
+        
+        /*
+        * Returns the command caller.
+        * @noparam
+        * @return           entity.
+        **/
+        entity getCmdCaller()
+        
+        /*
+        * Returns the command arguments.
+        * @noparam
+        * @return           array.
+        **/
+        array getCmdArgs()
+        
+        /*
+        * Returns the command arguments in string.
+        * @noparam
+        * @return           string.
+        **/
+        string getCmdArgsString()
+
+    Example:
+
+        #include "../chatCmd"
+        
+        if(first())
+        {
+            hideOwnerCmd(1)
+            
+            regChatCmd("test1", "TestCallBack1", CHAT_FLAG_ALL)
+            regChatCmd("test2", "TestCallBack2", CHAT_FLAG_OWNER)
+            regChatCmd("test3", "TestCallBack3", CHAT_FLAG_OWNER)
+        }
+        
+        if(clk("TestCallBack1"))
+        {
+            print("TestCallBack1", getCmdCaller(), getCmdArgs())
+        }
+        
+        if(clk("TestCallBack2"))
+        {
+            print("TestCallBack2", getCmdCaller(), getCmdArgs())
+        }
+        
+        if(clk("TestCallBack3"))
+        {
+            print("TestCallBack3", getCmdCaller(), getCmdArgsString())
+        }
+]#
+
+@persist [COMMAND_REG_ COMMAND_CACHE_]:table [CHAT_FLAG_ALL CHAT_FLAG_OWNER CHAT_FLAG_FRIENDS]:number [CHAT_HIDE_ CHAT_HIDE_TEMP]:number
+
+if(first()) {
+    CHAT_FLAG_ALL     = 0
+    CHAT_FLAG_OWNER   = 1
+    CHAT_FLAG_FRIENDS = 2
+    
+    CHAT_HIDE_     = 0
+    CHAT_HIDE_TEMP = 0
+    
+    function void hideOwnerCmd(Toggle:number) {
+        CHAT_HIDE_ = !!Toggle
+    }
+    
+    function void regChatCmd([Command Callback]:string, [Flag]:number) {
+        local Data = table()
+        Data["Caller", entity] = noentity()
+        Data["Args", array]    = array()
+        
+        COMMAND_REG_[Command, array]    = array(Callback, Flag)
+        COMMAND_CACHE_[Callback, table] = Data
+    }
+    
+    function entity getCmdCaller() {
+        return COMMAND_CACHE_[clkName(), table]["Caller", entity]
+    }
+    
+    function array getCmdArgs() {
+        return COMMAND_CACHE_[clkName(), table]["Args", array]
+    }
+    
+    function string getCmdArgsString() {
+        return COMMAND_CACHE_[clkName(), table]["Args", array]:concat(" ", 1)
+    }
+    runOnChat(1)
+}
+
+if(chatClk()) {
+    local Args     = lastSaid():trim():explode(" ")
+    local Command  = COMMAND_REG_[Args:string(1), array]
+    local Callback = Command[1, string]
+    
+    CHAT_HIDE_TEMP = 0
+    if(Callback) {
+        CHAT_HIDE_TEMP = 1
+        Args:removeString(1)
+    } else {
+        Command = COMMAND_REG_["", array]
+        Callback = Command[1, string]
+    }
+    
+    if(Callback) {
+        if(chatClk(owner()) & CHAT_HIDE_ & CHAT_HIDE_TEMP) {
+            hideChat(1)
+        }
+        
+        if(!Command[2, number] | chatClk(owner()) | (Command[2, number] == CHAT_FLAG_FRIENDS & owner():isSteamFriend(lastSpoke())) ) {
+            COMMAND_CACHE_[Callback, table]["Caller", entity] = lastSpoke()
+            COMMAND_CACHE_[Callback, table]["Args", array]    = Args
+            timer(Callback, 0)
+        }
+    }
+}

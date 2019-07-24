@@ -1,0 +1,262 @@
+#[
+    * =============================================== *
+    * Holo Create Ex. Version: 1.2. Author: 0x00000ED *
+    * =============================================== *
+
+    Materials:
+    
+        DEBUG_NODRAW
+        DEBUG_POLYGONS
+        DEBUG_WHITE
+        DEBUG_FULLBRIGHT
+        DEBUG_MISSING
+        DEBUG_RTCAMERA
+        DEBUG_CHROME
+    
+    Private:
+    
+        HOLO_LIST_
+        
+        MODEL_ANY_
+
+    Methods:
+
+        /*
+        * Creates a new hologram entity.
+        * @param Index      number.
+        * @param Model      string.
+        * @param Material   string.
+        * @param Color      vector.
+        * @param Scale      vector.
+        * @param Units      number.
+        * @param Pos        vector.
+        * @param Ang        angle.
+        * @param Parent     number.
+        * @return           number.
+        **/
+        number holoCreateEx(Index:number, [Model Material]:string, [Color Scale]:vector, Units:number, Pos:vector, Ang:angle, Parent:number)
+        
+        /*
+        * Creates a new hologram entity.
+        * @param Index      number.
+        * @param Model      string.
+        * @param Material   string.
+        * @param Color      vector.
+        * @param Scale      vector.
+        * @param Units      number.
+        * @param Pos        vector.
+        * @param Ang        angle.
+        * @param Parent     entity.
+        * @return           number.
+        **/
+        number holoCreateEx(Index:number, [Model Material]:string, [Color Scale]:vector, Units:number, Pos:vector, Ang:angle, Parent:entity)
+
+    
+    Example:
+
+        #include "../holoCreateEx"
+        
+        if(first())
+        {
+            local Id = 0
+            Id++
+            local HoloId1 = holoCreateEx(Id, "", "", vec(255), vec(1), 0, vec(0,0,10), ang(), 0)
+            Id++
+            local HoloId2 = holoCreateEx(Id, "", "", vec(255), vec(1), 1, vec(0,0,20), ang(), 0)
+            Id++
+            local HoloId3 = holoCreateEx(Id, "", "", vec(255), vec(1), 1, vec(0,0,30), ang(), entity())
+        }
+]#
+
+@persist [HOLO_LIST_ SPROPS_LIST_]:table [MODEL_ANY_ HoloSize]:number
+@persist [DEBUG_NODRAW DEBUG_POLYGONS DEBUG_WHITE DEBUG_FULLBRIGHT DEBUG_MISSING DEBUG_RTCAMERA DEBUG_CHROME]:string
+
+if(first())
+{
+    DEBUG_NODRAW     = "debug/debughitbox"
+    DEBUG_POLYGONS   = "debug/debugbrushwireframe"
+    DEBUG_WHITE      = "models/debug/debugwhite"
+    DEBUG_FULLBRIGHT = "debug/debugdrawflat"
+    DEBUG_MISSING    = "debug/debugempty"
+    DEBUG_RTCAMERA   = "debug/debugcamerarendertarget"
+    DEBUG_CHROME     = "debug/env_cubemap_model"
+    
+    SPROPS_LIST_ = table(
+        "copy"     = "copy",
+        "trade"    = "trade",
+        "pound"    = "pound",
+        "note_8a"  = "note_8a",
+        "note_8b"  = "note_8b",
+        "note_8c"  = "note_8c",
+        "note_16a" = "note_16a",
+        "note_16b" = "note_16b",
+        "note_16c" = "note_16c",
+        "star_1"   = "star_1",
+        "star_2"   = "star_2",
+        "star_3"   = "star_3",
+        "star_4"   = "star_4",
+        "arrow_a"  = "arrow_a",
+        "arrow_b"  = "arrow_b",
+        
+        "."  = "prd",
+        ","  = "com",
+        ":"  = "colon",
+        ";"  = "scolon",
+        "?"  = "qmark",
+        "!"  = "xmark",
+        "\"" = "quote",
+        "~"  = "tilde",
+        "<"  = "lessthan",
+        ">"  = "greaterthan",
+        "_"  = "underscore",
+        "@"  = "atsign",
+        "#"  = "pdsign",
+        "$"  = "dlsign",
+        "%"  = "pcnt",
+        "^"  = "crt",
+        "&"  = "and",
+        "'"  = "apost",
+        "("  = "lpar",
+        ")"  = "rpar",
+        "["  = "lbracket",
+        "]"  = "rbracket",
+        "{"  = "lcbracket",
+        "}"  = "rcbracket",
+        "|"  = "bar",
+        "+"  = "plu",
+        "-"  = "min",
+        "*"  = "ast",
+        "/"  = "div",
+        "="  = "equal",
+        
+        "A" = "a",
+        "B" = "b",
+        "C" = "c",
+        "D" = "d",
+        "E" = "e",
+        "F" = "f",
+        "G" = "g",
+        "H" = "h",
+        "I" = "i",
+        "J" = "j",
+        "K" = "k",
+        "L" = "l",
+        "M" = "m",
+        "N" = "n",
+        "O" = "o",
+        "P" = "p",
+        "Q" = "q",
+        "R" = "r",
+        "S" = "s",
+        "T" = "t",
+        "U" = "u",
+        "V" = "v",
+        "W" = "w",
+        "X" = "x",
+        "Y" = "y",
+        "Z" = "z",
+        
+        "a" = "l_a",
+        "b" = "l_b",
+        "c" = "l_c",
+        "d" = "l_d",
+        "e" = "l_e",
+        "f" = "l_f",
+        "g" = "l_g",
+        "h" = "l_h",
+        "i" = "l_i",
+        "j" = "l_j",
+        "k" = "l_k",
+        "l" = "l_l",
+        "m" = "l_m",
+        "n" = "l_n",
+        "o" = "l_o",
+        "p" = "l_p",
+        "q" = "l_q",
+        "r" = "l_r",
+        "s" = "l_s",
+        "t" = "l_t",
+        "u" = "l_u",
+        "v" = "l_v",
+        "w" = "l_w",
+        "x" = "l_x",
+        "y" = "l_y",
+        "z" = "l_z",
+        
+        "0" = "0",
+        "1" = "1",
+        "2" = "2",
+        "3" = "3",
+        "4" = "4",
+        "5" = "5",
+        "6" = "6",
+        "7" = "7",
+        "8" = "8",
+        "9" = "9"
+    )
+    
+    HOLO_LIST_ = invert(holoModelList())
+    HOLO_LIST_["", number] = 1
+    MODEL_ANY_ = holoModelAny() == 2
+    
+    HoloSize = 1
+    
+    function number entity:hCt_pvt___(Index:number, [Model Material]:string, [Color Scale]:vector, Units:number, Pos:vector, Ang:angle)
+    {
+        holoCreate(Index, This:toWorld(Pos * HoloSize), Scale * HoloSize, This:toWorld(Ang), Color)
+        
+        local Mdl = SPROPS_LIST_[Model, string] ? "models/sprops/misc/alphanum/alphanum_"+SPROPS_LIST_[Model, string]+".mdl" : Model
+        
+        if(MODEL_ANY_ | HOLO_LIST_[Mdl, number]) {
+            holoModel(Index, Mdl)
+        } else {
+            #ifdef entity:setModel(string)
+                holoEntity(Index):setModel(Mdl)
+            #else
+                holoModel(Index, Mdl)
+            #endif
+        }
+        
+        if(Units) {
+            holoScaleUnits(Index, Scale * HoloSize)
+        }
+        holoMaterial(Index, Material)
+        holoParent(Index, This)
+        
+        return Index
+    }
+    
+    function number holoCreateEx(Index:number, [Model Material]:string, [Color Scale]:vector, Units:number, Pos:vector, Ang:angle, Parent:number) {
+        return ((Parent > 0) ? holoEntity(Parent) : entity()):hCt_pvt___(Index, Model, Material, Color, Scale, Units, Pos, Ang)
+    }
+    
+    function number holoCreateEx(Index:number, [Model Material]:string, [Color Scale]:vector, Units:number, Pos:vector, Ang:angle, Parent:entity) {
+        return (Parent:isValid() ? Parent : entity()):hCt_pvt___(Index, Model, Material, Color, Scale, Units, Pos, Ang)
+    }
+    
+    function void holoSubMaterial(Index:number, MatIndex:number, Material:string) {
+        holoEntity(Index):setSubMaterial(MatIndex, Material)
+    }
+    
+    function void holoClipEx(Index:number, Clip:vector) {
+        local Normal = ang(Clip:x(), Clip:y(), 0):forward()
+        holoClipEnabled(Index, 1)
+        holoClip(Index, Normal * Clip:z() * HoloSize, Normal, 0)
+    }
+    
+    function void holoClipEx(Index:number, ClipIndex:number, Clip:vector) {
+        local Normal = ang(Clip:x(), Clip:y(), 0):forward()
+        holoClipEnabled(Index, ClipIndex, 1)
+        holoClip(Index, ClipIndex, Normal * Clip:z() * HoloSize, Normal, 0)
+    }
+    
+    #[
+    function void holoPosEx(Index:number, Position:vector, Parent:number) {
+        holoPos(Index, holoEntity(Parent):toWorld(Position * HoloSize))
+    }
+    
+    function void holoPosEx(Index:number, Position:vector, Parent:entity) {
+        holoPos(Index, Parent:toWorld(Position * HoloSize))
+    }
+    ]#
+}

@@ -1,0 +1,49 @@
+if(first())
+{
+    function string numDeclination(Num:number, Words:array) {
+        if(floor(Num / 10) % 10 != 1) {
+            switch(Num % 10) {
+                case(1),
+                    return Words:string(2)
+                break
+                
+                case(2),case(3),case(4),
+                    return Words:string(3)
+                break
+                
+                default,
+                    return Words:string(1)
+                break
+            }
+        }
+        return Words:string(1)
+    }
+    
+    #local MyString = format("%d %s", Num, numDeclination(Num, array("slov",   "slovo",   "slova")))
+    #local MyString = format("%d %s", Num, numDeclination(Num, array("dney",   "den'",    "dnia")))
+    #local MyString = format("%d %s", Num, numDeclination(Num, array("hyev",   "hui",     "huya")))
+    #local MyString = format("%d %s", Num, numDeclination(Num, array("dverey", "dver'",   "dveri")))
+    #local MyString = format("%d %s", Num, numDeclination(Num, array("chasov", "chas",    "chasa")))
+    #local MyString = format("%d %s", Num, numDeclination(Num, array("minut",  "minuta",  "minuti")))
+    #local MyString = format("%d %s", Num, numDeclination(Num, array("sekund", "sekunda", "sekundi")))
+    
+    #[
+    local Seconds = time()
+    
+    local Y = int(Seconds / (60*60*24*365))
+    local D = int(Seconds / (60*60*24)) % 365
+    local H = int(Seconds / (60*60)) % 24
+    local M = int(Seconds / 60) % 60
+    local S = Seconds % 60
+    
+    print(
+        format("%d %s %d %s %02d %s %02d %s %02d %s",
+            Y, numDeclination(Y, array("let", "god", "goda")),
+            D, numDeclination(D, array("dney", "den'", "dnya")),
+            H, numDeclination(H, array("chasov", "chas", "chasa")),
+            M, numDeclination(M, array("minut", "minuta", "minuti")),
+            S, numDeclination(S, array("sekund", "sekunda", "sekundi"))
+        )
+    )
+    ]#
+}

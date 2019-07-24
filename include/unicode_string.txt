@@ -1,0 +1,177 @@
+#[
+    * ======================================================= *
+    * Unicode string (ru/en). Version: 1.3. Author: 0x00000ED *
+    * ======================================================= *
+    
+    Methods:
+
+        /*
+        * All characters are made lowercase
+        * @param Self       string.
+        * @return           string.
+        **/
+        string string:unicodeLower()
+        
+        /*
+        * All characters are made uppercase
+        * @param Self       string.
+        * @return           string.
+        **/
+        string string:unicodeUpper()
+        
+        /*
+        * Returns the translated string.
+        * @param Self       string.
+        * @return           string.
+        **/
+        string string:translit()
+]#
+
+@persist TRANSLIT__:table
+
+if(first()) {
+    function string string:unicodeLower() {
+        This = This:lower()
+        
+        local StrLen = This:length()
+        if(This:unicodeLength() == StrLen) {
+            return This
+        }
+        
+        local Str = Char = ""
+        local Offset = Byte = 0
+        
+        while(Offset < StrLen) {
+            Byte = toUnicodeByte(This:sub(Offset+1))
+            Char = toUnicodeChar(Byte)
+            Offset += Char:length()
+            if(1040 <= Byte & Byte <= 1071) {
+                Str += toUnicodeChar(Byte+32)
+            } elseif(Byte == 1025) {
+                Str += toUnicodeChar(Byte+80)
+            } else {
+                Str += Char
+            }
+        }
+        return Str
+    }
+    
+    function string string:unicodeUpper() {
+        This = This:upper()
+        
+        local StrLen = This:length()
+        if(This:unicodeLength() == StrLen) {
+            return This
+        }
+        
+        local Str = Char = ""
+        local Offset = Byte = 0
+        
+        while(Offset < StrLen) {
+            Byte = toUnicodeByte(This:sub(Offset+1))
+            Char = toUnicodeChar(Byte)
+            Offset += Char:length()
+            if(1072 <= Byte & Byte <= 1103) {
+                Str += toUnicodeChar(Byte-32)
+            } elseif(Byte == 1105) {
+                Str += toUnicodeChar(Byte-80)
+            } else {
+                Str += Char
+            }
+        }
+        return Str
+    }
+    
+    TRANSLIT__[1040, string] = "A"
+    TRANSLIT__[1041, string] = "B"
+    TRANSLIT__[1042, string] = "V"
+    TRANSLIT__[1043, string] = "G"
+    TRANSLIT__[1044, string] = "D"
+    TRANSLIT__[1045, string] = "E"
+    TRANSLIT__[1025, string] = "YO"
+    TRANSLIT__[1046, string] = "ZH"
+    TRANSLIT__[1047, string] = "Z"
+    TRANSLIT__[1048, string] = "I"
+    TRANSLIT__[1049, string] = "J"
+    TRANSLIT__[1050, string] = "K"
+    TRANSLIT__[1051, string] = "L"
+    TRANSLIT__[1052, string] = "M"
+    TRANSLIT__[1053, string] = "N"
+    TRANSLIT__[1054, string] = "O"
+    TRANSLIT__[1055, string] = "P"
+    TRANSLIT__[1056, string] = "R"
+    TRANSLIT__[1057, string] = "S"
+    TRANSLIT__[1058, string] = "T"
+    TRANSLIT__[1059, string] = "U"
+    TRANSLIT__[1060, string] = "F"
+    TRANSLIT__[1061, string] = "H"
+    TRANSLIT__[1062, string] = "C"
+    TRANSLIT__[1063, string] = "CH"
+    TRANSLIT__[1064, string] = "SH"
+    TRANSLIT__[1065, string] = "SHCH"
+    TRANSLIT__[1066, string] = "\""
+    TRANSLIT__[1067, string] = "Y"
+    TRANSLIT__[1068, string] = "'"
+    TRANSLIT__[1069, string] = "EH"
+    TRANSLIT__[1070, string] = "YU"
+    TRANSLIT__[1071, string] = "YA"
+    
+    TRANSLIT__[1072, string] = "a"
+    TRANSLIT__[1073, string] = "b"
+    TRANSLIT__[1074, string] = "v"
+    TRANSLIT__[1075, string] = "g"
+    TRANSLIT__[1076, string] = "d"
+    TRANSLIT__[1077, string] = "e"
+    TRANSLIT__[1105, string] = "yo"
+    TRANSLIT__[1078, string] = "zh"
+    TRANSLIT__[1079, string] = "z"
+    TRANSLIT__[1080, string] = "i"
+    TRANSLIT__[1081, string] = "j"
+    TRANSLIT__[1082, string] = "k"
+    TRANSLIT__[1083, string] = "l"
+    TRANSLIT__[1084, string] = "m"
+    TRANSLIT__[1085, string] = "n"
+    TRANSLIT__[1086, string] = "o"
+    TRANSLIT__[1087, string] = "p"
+    TRANSLIT__[1088, string] = "r"
+    TRANSLIT__[1089, string] = "s"
+    TRANSLIT__[1090, string] = "t"
+    TRANSLIT__[1091, string] = "u"
+    TRANSLIT__[1092, string] = "f"
+    TRANSLIT__[1093, string] = "h"
+    TRANSLIT__[1094, string] = "c"
+    TRANSLIT__[1095, string] = "ch"
+    TRANSLIT__[1096, string] = "sh"
+    TRANSLIT__[1097, string] = "shch"
+    TRANSLIT__[1098, string] = "\""
+    TRANSLIT__[1099, string] = "y"
+    TRANSLIT__[1100, string] = "'"
+    TRANSLIT__[1101, string] = "eh"
+    TRANSLIT__[1102, string] = "yu"
+    TRANSLIT__[1103, string] = "ya"
+    
+    function string string:translit() {
+        local StrLen = This:length()
+        if(This:unicodeLength() == StrLen) {
+            return This
+        }
+        
+        local Str = Char = ""
+        local Offset = Byte = 0
+        
+        while(Offset < StrLen) {
+            Byte = toUnicodeByte(This:sub(Offset+1))
+            Char = toUnicodeChar(Byte)
+            Offset += Char:length()
+            
+            if(32 <= Byte & Byte <= 126) {
+                Str += Char
+            } elseif(TRANSLIT__[Byte, string]) {
+                Str += TRANSLIT__[Byte, string]
+            } else {
+                Str += "."
+            }
+        }
+        return Str
+    }
+}

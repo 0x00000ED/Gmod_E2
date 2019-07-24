@@ -1,0 +1,230 @@
+#[
+    * ============================================== *
+    * Local Storage. Version: 0.1. Author: 0x00000ED *
+    * ============================================== *
+
+    Constants:
+        none
+
+    Methods:
+    
+        void localStorage()
+        
+        number isValidCookie(Name:string)
+        
+        string getCookie(Name:string)
+        
+        number setCookie(Name:string, Value:string)
+        
+        number delCookie(Name:string)
+        
+        number clearCookies()
+        
+        void dumpCookies()
+        
+        void setCookieCachedClk(Callback:string)
+        
+        void setCookieSavedClk(Callback:string)
+        
+    Callbacks:
+        
+        void onCookieCached()
+        
+        void onCookieSaved()
+        
+    Example:
+
+        #include "../localStorage"
+        
+        if(first()) {
+            
+            function void onCookieCached() {
+                setCookie("test_cookie1", "cookie_"+entity():id())
+                
+                dumpCookies()
+            }
+            
+            function void onCookieSaved() {
+                setCookie("test_cookie2", "set on last")
+            }
+            
+            localStorage()
+        }
+]#
+
+@persist [LOCAL_STORAGE_]:gtable [TRY_LOAD_COUNT_ TRY_SAVE_COUNT_]:number [LS_LOADING LS_LOADED LS_ERROR]:number [LS_CACHED_CALLBACK_ LS_SAVED_CALLBACK_]:string
+
+if(first())
+{
+    LS_WAITING = 1
+    LS_LOADING = 2
+    LS_LOADED  = 3
+    LS_ERROR   = 4
+    
+    TRY_LOAD_COUNT_ = 0
+    TRY_SAVE_COUNT_ = 0
+    
+    LS_CACHED_CALLBACK_ = "onCookieCached"
+    LS_SAVED_CALLBACK_  = "onCookieSaved"
+    
+    function void onCookieCached(){}
+    function void onCookieSaved(){}
+    
+    function void localStorage()
+    {
+        LOCAL_STORAGE_= gTable("LOCAL_STORAGE_", 0)
+        
+        if(!LOCAL_STORAGE_:count()) {
+            LOCAL_STORAGE_["cookies", table] = table()
+            LOCAL_STORAGE_["state",  number] = LS_WAITING
+            LOCAL_STORAGE_["error",  number] = 0
+            LOCAL_STORAGE_["chips",  number] = 1
+            
+            timer("localStorage_try_load", 200)
+            runOnFile(1)
+        } else {
+            LOCAL_STORAGE_["chips", number] = LOCAL_STORAGE_["chips", number] + 1
+            if(LOCAL_STORAGE_["state", number] == LS_LOADED) {
+                LS_CACHED_CALLBACK_()
+            }
+        }
+    }
+    
+    function number isValidCookie(Name:string) {
+        if(LOCAL_STORAGE_["state", number] == LS_LOADED) {
+            return LOCAL_STORAGE_["cookies", table][Name, string] != ""
+        }
+        return 0
+    }
+    
+    function string getCookie(Name:string) {
+        if(LOCAL_STORAGE_["state", number] == LS_LOADED) {
+            return LOCAL_STORAGE_["cookies", table][Name, string]
+        }
+        return ""
+    }
+    
+    function number setCookie(Name:string, Value:string) {
+        if(LOCAL_STORAGE_["state", number] == LS_LOADED) {
+            LOCAL_STORAGE_["cookies", table][Name, string] = Value
+            return 1
+        }
+        return 0
+    }
+    
+    function number delCookie(Name:string) {
+        if(LOCAL_STORAGE_["state", number] == LS_LOADED) {
+            LOCAL_STORAGE_["cookies", table]:removeString(Name)
+            return 1
+        }
+        return 0
+    }
+    
+    function number clearCookies() {
+        if(LOCAL_STORAGE_["state", number] == LS_LOADED) {
+            LOCAL_STORAGE_["cookies", table]:clear()
+            return 1
+        }
+        return 0
+    }
+    
+    function void dumpCookies() {
+        if(LOCAL_STORAGE_["state", number] == LS_LOADED) {
+            printTable(LOCAL_STORAGE_["cookies", table])
+        }
+    }
+    
+    function void setCookieCachedClk(Callback:string) {
+        LS_CACHED_CALLBACK_ = Callback
+    }
+    
+    function void setCookieSavedClk(Callback:string) {
+        LS_SAVED_CALLBACK_ = Callback
+    }
+    
+    runOnLast(1)
+}
+
+if(clk("localStorage_try_load"))
+{
+    if(fileCanLoad()) {
+        LOCAL_STORAGE_["state", number] = LS_LOADING
+        fileLoad(">e2shared/LocalStorage/localStorage.txt")
+        TRY_LOAD_COUNT_ = 0
+    } else {
+        TRY_LOAD_COUNT_++
+        if(TRY_LOAD_COUNT_ < 5) {
+            print("Retry Loading... "+TRY_LOAD_COUNT_)
+            timer("localStorage_try_load", 1000)
+        } else {
+            print("LOCAL STORAGE [ERROR] Loading TIMEOUT")
+        }
+    }
+}
+
+if(clk("localStorage_try_save"))
+{
+    if(LOCAL_STORAGE_["state", number] == LS_LOADED) {
+        if(fileCanWrite()) {
+            fileWrite(">e2shared/LocalStorage/localStorage.txt", jsonEncode(LOCAL_STORAGE_["cookies", table]))
+            TRY_SAVE_COUNT_ = 0
+            LOCAL_STORAGE_:clear()
+        } else {
+            TRY_SAVE_COUNT_++
+            if(TRY_SAVE_COUNT_ < 5) {
+                print("Retry Saving... "+TRY_SAVE_COUNT_)
+                timer("localStorage_try_save", 1000)
+            } else {
+                print("LOCAL STORAGE [ERROR] Saving TIMEOUT")
+            }
+        }
+    }
+}
+
+if(fileClk()) {
+    runOnFile(0)
+    switch(fileStatus()) {
+        case(_FILE_OK),
+        case(_FILE_404),
+            LOCAL_STORAGE_["cookies", table] = jsonDecode(fileRead())
+            local Error = jsonError()
+            
+            if(Error) {
+                LOCAL_STORAGE_["state", number] = LS_ERROR
+                print("LOCAL STORAGE [ERROR] Loading "+Error)
+            } else {
+                LOCAL_STORAGE_["state", number] = LS_LOADED
+                LS_CACHED_CALLBACK_()
+            }
+        break
+        
+        default,
+            print("LOCAL STORAGE [ERROR] Loading")
+        break
+    }
+}
+
+if(last())
+{
+    if(LOCAL_STORAGE_["chips", number] > 0)
+    {
+        if(LOCAL_STORAGE_["state", number] == LS_LOADED) {
+            LS_SAVED_CALLBACK_()
+        }
+        
+        if(LOCAL_STORAGE_["chips", number] > 1) {
+            LOCAL_STORAGE_["chips", number] = LOCAL_STORAGE_["chips", number] - 1
+        } else {
+            if(LOCAL_STORAGE_["state", number] == LS_LOADED) {
+                if(fileCanWrite()) {
+                    fileWrite(">e2shared/LocalStorage/localStorage.txt", jsonEncode(LOCAL_STORAGE_["cookies", table]))
+                    LOCAL_STORAGE_:clear()
+                } else {
+                    timer("localStorage_try_save", 0)
+                }
+            } else {
+                LOCAL_STORAGE_:clear()
+            }
+        }
+    }
+}

@@ -1,0 +1,147 @@
+@name 0xChatSounds_v2
+@inputs 
+@outputs 
+@persist [CHAT_SOUNDS PLAYER_PHRASES FILTER]:table [UPDATE_DELAY]:number [ROOT_URL]:string
+@trigger 
+
+#include "include/chatCmd"
+
+if(first())
+{
+    #FILTER["STEAM_0:0:61857394", number] = 1 #Ave
+    #FILTER["STEAM_0:1:156243915", number] = 1 #kentura
+    
+    ROOT_URL       = "https://ox.krakenpro.ru/gmod/chatsounds/"
+    UPDATE_DELAY   = 200
+    PLAYER_PHRASES = table()
+    
+    function string getSoundGroup(Phrase:string) {
+        local Sound = CHAT_SOUNDS["triggers", table][Phrase, string]
+        if(!Sound) {
+            local NumPhrase = Phrase:toNumber()
+            if(NumPhrase) {
+                Sound = CHAT_SOUNDS["triggers", table][NumPhrase, string]
+            }
+        }
+        return Sound
+    }
+    
+    function array getTriggerSound(SGroup:string) {
+        local Count = CHAT_SOUNDS["sounds", table][SGroup, table]:count()
+        if(!Count) {
+            local NumGroup = SGroup:toNumber()
+            Count = CHAT_SOUNDS["sounds", table][NumGroup, table]:count()
+            if(Count) {
+                return CHAT_SOUNDS["sounds", table][NumGroup, table][randint(1, Count), table]:values()
+            }
+        } else {
+            return CHAT_SOUNDS["sounds", table][SGroup, table][randint(1, Count), table]:values()
+        }
+        return array()
+    }
+    
+    function void loadTriggers() {
+        if(httpCanRequest()) {
+            httpRequest(ROOT_URL+"sounds.json?t="+curtime())
+        } else {
+            print("Try again later :(")
+        }
+    }
+    
+    loadTriggers()
+    
+    regChatCmd("", "CMD_ChatSounds", CHAT_FLAG_ALL)
+    runOnHTTP(1)
+}
+
+if(httpClk()) {
+    local Tbl = jsonDecode(httpData())
+    if(Tbl:count()) {
+        CHAT_SOUNDS = Tbl
+        runOnHTTP(0)
+        
+        #printTable(CHAT_SOUNDS["sounds", table])
+        #entity():setAlpha(0)
+        #entity():propNotSolid(1)
+        
+        timer("_play_chat_sounds", 0)
+    } else {
+        print("Loading Fail :(")
+    }
+}
+
+if(clk("CMD_ChatSounds")) {
+    local Caller = getCmdCaller()
+    if(!FILTER[Caller:steamID(), number]) {
+        local Message = getCmdArgs()
+        
+        #print("Original "+Message:concat(" "))
+        
+        local CallerId = Caller:id()
+        
+        if(!PLAYER_PHRASES:exists(CallerId))
+        {
+            local Data = table()
+            Data["playtime", number] = 0
+            Data["phrases", array] = array()
+            PLAYER_PHRASES[CallerId, table] = Data
+            
+            #entity():setPos(Caller:pos())
+        }
+        
+        local Curtime = systime()
+        local Hystory = PLAYER_PHRASES[CallerId, table]["phrases", array]:count()
+        
+        local Phrase = ""
+        local Count = Message:count() > 10 ? 10 : Message:count()
+        local I = 1
+        
+        while(I <= Count) {
+            Phrase = ""
+            if(Message:string(I) != "") {
+                for(J = I, Count) {
+                    local Msg = Message:string(J)
+                    if(Msg != "") {
+                        Phrase += Phrase ? " " + Msg : Msg
+                        
+                        local Sound = getSoundGroup(Phrase)
+                        if(Sound) {
+                            if(Hystory) {
+                                Hystory = 0
+                                PLAYER_PHRASES[CallerId, table]["phrases", array]:clear()
+                            }
+                            
+                            #print(Sound)
+                            
+                            PLAYER_PHRASES[CallerId, table]["playtime", number] = Curtime
+                            PLAYER_PHRASES[CallerId, table]["phrases", array]:pushString(Sound)
+                            
+                            if(I != J) {
+                                I++
+                            }
+                            break
+                        }
+                    }
+                }
+            }
+            I++
+        }
+    }
+}
+
+if(clk("_play_chat_sounds")) {
+    local CurTime = systime()
+    foreach(K,V:number = PLAYER_PHRASES:keys()) {
+        local CanPlayNext = CurTime > PLAYER_PHRASES[V, table]["playtime", number]
+        if(CanPlayNext & PLAYER_PHRASES[V, table]["phrases", array]:count()) {
+            local Phrase = PLAYER_PHRASES[V, table]["phrases", array]:removeString(1)
+            #print(format("[%s]", Phrase))
+            local Sound = getTriggerSound(Phrase)
+            PLAYER_PHRASES[V, table]["playtime", number] = CurTime + Sound:number(2) + owner():ping()/1000 + entity(V):ping() / 1000
+            local Url = ROOT_URL+Sound:string(1)+".mp3"
+            #print("load "+Url+"  "+V)
+            soundURLload(V, Url, 1, 0, entity(V))
+        }
+    }
+    timer("_play_chat_sounds", UPDATE_DELAY)
+}

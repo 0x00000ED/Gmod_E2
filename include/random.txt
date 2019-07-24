@@ -1,0 +1,110 @@
+#[
+    * ======================================= *
+    * Random. Version: 1.0. Author: 0x00000ED *
+    * ======================================= *
+    
+    Methods:
+        
+        /*
+        * Seeds the random number generator. The same seed will guarantee the same sequence of numbers each time with rand.
+        * @param Seed       number.
+        * @noreturn
+        **/
+        void srand(Seed:number)
+        
+        /*
+        * Reposition the random number generator next value.
+        * @noreturn
+        **/
+        void randomize()
+        
+        /*
+        * Returns a random floating-point number between 0 and 1 [0 .. 1) | 0 <= x < 1
+        * @return           number.
+        **/
+        number rand()
+        
+        /*
+        * Returns a random floating-point number between 0 and the specified value [0 .. Limit) | 0 <= x < Limit
+        * @param Limit      number.
+        * @return           number.
+        **/
+        number randf(Limit:number)
+        
+        /*
+        * Returns a random floating-point number between the specified interval [Min .. Max) | Min <= x < Max
+        * @param Min        number.
+        * @param Max        number.
+        * @return           number.
+        **/
+        number randf([Min Max]:number)
+        
+        /*
+        * Returns a random integer number between 0 and the specified value [0 .. Limit) | 0 <= x < Limit
+        * @param Limit      number.
+        * @return           number.
+        **/
+        number randi(Limit:number)
+        
+        /*
+        * Returns a random integer number between the specified interval [Min .. Max] | Min <= x <= Max
+        * @param Min        number.
+        * @param Max        number.
+        * @return           number.
+        **/
+        number randi([Min Max]:number)
+        
+    Example:
+
+        #include "../random"
+        
+        if(first())
+        {
+            randomize()
+            for(I = 1, 15)
+            {
+                print(randf(-1,1))
+            }
+        }
+]#
+
+@persist [RAND_MAX RAND_SEED]:number
+
+if(first())
+{
+    RAND_MAX  = 32767
+    RAND_SEED = 1
+    
+    function void srand(Seed:number) {
+        RAND_SEED = Seed
+    }
+    
+    function void randomize() {
+        srand(time() || (systime() * 1000000))
+    }
+    
+    function number rand() {
+        RAND_SEED = ((RAND_SEED * 1103515245) + 12345) && 0x7FFFFFFF
+        return (RAND_SEED / 65536) % RAND_MAX / RAND_MAX
+    }
+    
+    function number randf(Limit:number) {
+        return rand() * Limit
+    }
+    
+    function number randf([Min Max]:number) {
+        if(Min > Max) { local Tmp = Min Min = Max Max = Tmp }
+        return randf(Max - Min) + Min
+    }
+    
+    function number randi(Limit:number) {
+        return int(rand() * Limit)
+    }
+    
+    function number randi([Min Max]:number) {
+        Min = int(Min)
+        Max = int(Max)
+        if(Min > Max) { local Tmp = Min Min = Max Max = Tmp }
+        return randi(Max - Min + 1) + Min
+    }
+}
