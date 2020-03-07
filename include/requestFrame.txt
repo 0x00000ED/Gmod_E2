@@ -1,0 +1,74 @@
+if(first()) {
+    function void requestFrame(Callback:string) {
+        timer(format("RequestFrame%s%s%s%d", Callback, toChar(0x1), "n", 0), 0)
+    }
+    
+    function void requestFrame(Callback:string, Data:number) {
+        timer(format("RequestFrame%s%s%s%d", Callback, toChar(0x1), "d", Data), 0)
+    }
+    
+    function void requestFrame(Callback:string, Data:string) {
+        timer(format("RequestFrame%s%s%s%s", Callback, toChar(0x1), "s", Data), 0)
+    }
+    
+    function void requestFrame(Callback:string, Data:table) {
+        timer(format("RequestFrame%s%s%s%s", Callback, toChar(0x1), "t", jsonEncode(Data)), 0)
+    }
+    
+    #[
+    function void test_RequestFrame()
+    {
+        print("callback")
+    }
+    
+    function void test_RequestFrame_Number(Data:number)
+    {
+        print(Data)
+    }
+    
+    function void test_RequestFrame_String(Data:string)
+    {
+        print(Data)
+    }
+    
+    function void test_RequestFrame_Table(Data:table)
+    {
+        printTable(Data)
+    }
+    
+    requestFrame("test_RequestFrame")
+    requestFrame("test_RequestFrame_Number", 100500)
+    requestFrame("test_RequestFrame_String", "test_string")
+    requestFrame("test_RequestFrame_Table", table(1 = 0, "key1" = 1, "key2" = 2))
+    ]#
+}
+
+if(clkName()) {
+    local ClkName = clkName()
+    if(ClkName:find("RequestFrame", 0)) {
+        local DataPos  = ClkName:find(toChar(0x1), 12)
+        local Callback = ClkName:sub(13, DataPos-1)
+        local DataType = ClkName:sub(DataPos+1, DataPos+1)
+        local Data     = ClkName:sub(DataPos+2)
+        
+        switch(DataType)
+        {
+            case("n"),
+                Callback()
+            break
+            
+            case("d"),
+                Callback(Data:toNumber())
+            break
+            
+            case("t"),
+                Callback(jsonDecode(Data))
+            break
+            
+            default,
+                Callback(Data)
+            break
+        }
+    }
+}
+

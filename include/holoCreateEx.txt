@@ -1,7 +1,7 @@
 #[
-    * =============================================== *
-    * Holo Create Ex. Version: 1.2. Author: 0x00000ED *
-    * =============================================== *
+    * ================================================= *
+    * Holo Create Ex. Version: 1.2.1. Author: 0x00000ED *
+    * ================================================= *
 
     Materials:
     
@@ -248,6 +248,19 @@ if(first())
         local Normal = ang(Clip:x(), Clip:y(), 0):forward()
         holoClipEnabled(Index, ClipIndex, 1)
         holoClip(Index, ClipIndex, Normal * Clip:z() * HoloSize, Normal, 0)
+    }
+    
+    function void holoModelEx(Index:number, Model:string) {
+        local Mdl = SPROPS_LIST_[Model, string] ? "models/sprops/misc/alphanum/alphanum_"+SPROPS_LIST_[Model, string]+".mdl" : Model
+        if(MODEL_ANY_ | HOLO_LIST_[Mdl, number]) {
+            holoModel(Index, Mdl)
+        } else {
+            #ifdef entity:setModel(string)
+                holoEntity(Index):setModel(Mdl)
+            #else
+                holoModel(Index, Mdl)
+            #endif
+        }
     }
     
     #[
