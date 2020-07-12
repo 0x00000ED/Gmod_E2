@@ -1,6 +1,6 @@
 #[
     * ================================================= *
-    * Holo Create Ex. Version: 1.2.1. Author: 0x00000ED *
+    * Holo Create Ex. Version: 1.2.2. Author: 0x00000ED *
     * ================================================= *
 
     Materials:
@@ -12,6 +12,7 @@
         DEBUG_MISSING
         DEBUG_RTCAMERA
         DEBUG_CHROME
+        DEBUG_HINT
     
     Private:
     
@@ -69,7 +70,7 @@
 ]#
 
 @persist [HOLO_LIST_ SPROPS_LIST_]:table [MODEL_ANY_ HoloSize]:number
-@persist [DEBUG_NODRAW DEBUG_POLYGONS DEBUG_WHITE DEBUG_FULLBRIGHT DEBUG_MISSING DEBUG_RTCAMERA DEBUG_CHROME]:string
+@persist [DEBUG_NODRAW DEBUG_POLYGONS DEBUG_WHITE DEBUG_FULLBRIGHT DEBUG_MISSING DEBUG_RTCAMERA DEBUG_CHROME DEBUG_HINT]:string
 
 if(first())
 {
@@ -80,6 +81,7 @@ if(first())
     DEBUG_MISSING    = "debug/debugempty"
     DEBUG_RTCAMERA   = "debug/debugcamerarendertarget"
     DEBUG_CHROME     = "debug/env_cubemap_model"
+    DEBUG_HINT       = "vgui/screens/transparent"
     
     SPROPS_LIST_ = table(
         "copy"     = "copy",
